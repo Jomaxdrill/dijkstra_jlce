@@ -172,3 +172,63 @@ def check_in_obstacle(state):
 		return True
 	return False
 
+def update_cost(current_cost, action):
+	"""
+	This function updates the cost of a node based on the action taken.
+
+	Args:
+		current_cost (float): The current cost of the node.
+		action (str): The action taken to reach the node.
+
+	Returns:
+		float: The updated cost of the node.
+
+	"""
+	if action in cost_one:
+		return current_cost + 1
+	if action in cost_square_two:
+		return current_cost + 1.4
+	return current_cost
+
+def apply_action(state, type_action):
+	"""
+	This function applies an action to a given state.
+
+	Args:
+		state (tuple): The current state of the puzzle.
+		type_action (str): The type of action to apply.
+
+	Returns:
+		tuple: The new state after applying the action.
+
+	Raises:
+		ValueError: If the input action is not valid.
+
+	"""
+	action_to_do = action_operator.get(type_action, None)
+	if action_to_do is None:
+		return None
+	return tuple(coor1 + coor2 for coor1, coor2 in zip(state, action_to_do))
+
+def action_move(current_node, action):
+	"""
+	This function creates and verfies if the movement is valid or not
+	Args:
+		current_node (Node): Node to move
+
+	Returns:
+		Node: new Node with new configuration and state
+	"""
+	state_moved = apply_action(current_node[3], action)
+	#print(state_moved)
+	#*check new node is in obstacle space
+	if check_in_obstacle(state_moved):
+		#print(f'obstacle reached for { state_moved }')
+		return None
+	#*check by the state duplicate values between the children
+	node_already_visited = state_moved in visited_nodes_states
+	if node_already_visited:
+		return None
+	new_node = ( update_cost(current_node[0], action), -1, current_node[1], state_moved )
+	return new_node
+
