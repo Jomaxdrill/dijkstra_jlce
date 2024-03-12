@@ -1,3 +1,4 @@
+################## GO TO: https://github.com/Jomaxdrill/dijkstra_jlce
 import heapq as hq
 import numpy as np
 import time
@@ -434,3 +435,25 @@ space_image = axis.imshow(space, origin='lower')
 # plt.imshow(space, origin='lower')
 # plt.show()
 print(space_image)
+print("-----------COMPUTING FRAMES AND DATA-------------")
+chunks_generated_nodes = processing_frames(visited_nodes)
+chunks_goal_path_nodes = processing_frames(goal_path)
+frames_nodes = len(chunks_generated_nodes)
+frames_goal_path = len(chunks_goal_path_nodes)
+real_total_frames = frames_nodes + frames_goal_path
+print(f'Total frames are :{frames_nodes}')
+print(f'frames for node generation are :{frames_nodes} with {len(chunks_generated_nodes[0])} nodes per frame')
+print(f'frames for goal path generation are :{frames_goal_path}with {len(chunks_goal_path_nodes[0])} nodes per frame')
+# Set up animation
+anim = animation.FuncAnimation(fig,partial(display,
+										chunks_nodes = chunks_generated_nodes,
+										chunks_goal_path= chunks_goal_path_nodes),
+										frames= real_total_frames+5,#add some delay after end
+										interval= 20,
+										blit= True)
+
+anim.save("dijkstra_jonathan_crespo.mp4", writer="ffmpeg",fps=30)
+
+
+
+
