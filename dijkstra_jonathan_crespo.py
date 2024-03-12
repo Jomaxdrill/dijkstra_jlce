@@ -308,3 +308,129 @@ def generate_path(node):
 		node = visited_nodes[parent_at] if parent_at < len(visited_nodes) else None
 	return True
 
+###* FUNCTIONS FOR ANIMATE THE SOLUTION #####
+def draw_obstacles():
+	"""
+	This function draws the obstacles in the space.
+	"""
+	obstacle_1 = plt.Rectangle((100,100), 75, 400, fc= obstacles_color)
+	obstacle_2 = plt.Rectangle((275,0), 75, 400, fc= obstacles_color)
+	points_obs_3 = ((650,400),(780,325),(780,175),(650,100),(520,175),(520,325))
+	obstacle_3 = plt.Polygon(points_obs_3, fc= obstacles_color)
+	obstacle_4_1 = plt.Rectangle((900,50), 200,75, fc= obstacles_color)
+	obstacle_4_2 = plt.Rectangle((1020,125), 80, 250, fc= obstacles_color)
+	obstacle_4_3 = plt.Rectangle((900,375), 200,75, fc= obstacles_color)
+	circle_initial = plt.Circle(initial_state, 7.5, fc= initial_state_color)
+	circle_goal = plt.Circle(goal_state, 7.5, fc= goal_state_color)
+	set_figures = [ obstacle_1,
+					obstacle_2,
+					obstacle_3,
+					obstacle_4_1,
+					obstacle_4_2,
+					obstacle_4_3,
+					circle_initial,circle_goal ]
+	for obstacle in set_figures:
+		#* by patches the figures will remain as constat an unmutable in the plot
+		axis.add_patch(obstacle)
+
+
+def display(frame,chunks_nodes, chunks_goal_path):
+	""" This function is the callback for the animation process
+
+	Args:
+		frame (int): current index of frame to display
+		chunks_nodes (array): nodes per frame to display
+		chunks_goal_path (array): nodes of the goal path to display
+
+	Returns:
+		array: iterator for the scene
+	"""
+	color_of_node = None
+	chunk = None
+	print(f' processing frame {frame}')
+	if frame < len(chunks_nodes):
+		chunk = chunks_nodes[frame]
+		#print(f'chunk for visited node is {chunk}')
+		color_of_node = nodes_color
+		for value in chunk:
+			col,row = value[3]
+			space[row, col] = color_of_node
+	elif frame < (len(chunks_nodes) + len(chunks_goal_path)):
+		chunk = chunks_goal_path[frame-len(chunks_nodes)]
+		color_of_node = goal_path_color
+		#print(f'chunk for goal is {chunk}')
+		for col,row in chunk:
+			space[row, col] = color_of_node
+	#* positions were given in (x,y) but the x is the column position so the y the row position
+	space_image.set_array(space)
+	return [space_image]
+
+
+def processing_frames(arr_nodes):
+	"""
+	This function is used to calculate the number of nodes to process per frame.
+
+	Args:
+		arr_nodes (list): A list of nodes to process.
+
+	Returns:
+		list: A list of nodes to process per frame.
+
+	"""
+	# Calculate the number of nodes to process per frame
+	total_nodes = len(arr_nodes)
+	arr_per_frame =  total_nodes / frames_per_event
+	print(f'points per frame should be {arr_per_frame}')
+	# # If there are fewer nodes than the desired frames per event, process all nodes in one frame
+	if arr_per_frame < 1 or (arr_per_frame >=1 and arr_per_frame <= nodes_frames_min_event):
+		arr_per_frame = nodes_frames_min_event
+	arr_per_frame = round(arr_per_frame)
+	print(f'nodes per frame are {arr_per_frame}')
+	chunks_arr = divide_array(arr_per_frame, arr_nodes)
+	return chunks_arr
+
+def divide_array(nodes_per_frame, arr_nodes):
+	"""
+	This function is used to divide an array into chunks of a specified size.
+
+	Args:
+		nodes_per_frame (int): The number of nodes to include in each chunk.
+		arr_nodes (list): A list of nodes to divide.
+
+	Returns:
+		list: A list of lists, where each sub-list represents a chunk of nodes.
+
+	"""
+	arr_size = len(arr_nodes)
+	if arr_size <= nodes_per_frame:
+			return [ arr_nodes ]
+	# Calculate the number of full chunks and the size of the remaining chunk
+	number_full_slices  = arr_size // nodes_per_frame
+	remaining_slice = arr_size % nodes_per_frame
+	# Slice the array into chunks of the nodes per frame
+	sliced_chunks = [ arr_nodes[idx*nodes_per_frame:(idx+1)*nodes_per_frame]
+				for idx in range(number_full_slices) ]
+	# Remaining nodes into a separate chunk
+	if remaining_slice > 0:
+		sliced_chunks.append(arr_nodes[number_full_slices*nodes_per_frame:])
+	return sliced_chunks
+
+
+######*INPUTS AND SOLUTIONS #####
+print("-----------WELCOME TO PATH PLANNING SOLVER DIJKSTRA ALGORITHM-------------")
+initial_state = coordinate_input('initial')
+goal_state = coordinate_input('goal')
+print(create_nodes(initial_state, goal_state))
+print(f'total generated nodes were:{len(generated_nodes)}')
+print(f'total visited nodes were:{len(visited_nodes)}')
+generate_path(visited_nodes[-1])
+print(f'total goal path is :{len(goal_path)}')
+#######* GENERATE VIDEO #################################
+print("-----------CREATING SPACE AND OBSTACLES-------------")
+fig, axis = plt.subplots()
+tl = clearance
+draw_obstacles()
+space_image = axis.imshow(space, origin='lower')
+# plt.imshow(space, origin='lower')
+# plt.show()
+print(space_image)
