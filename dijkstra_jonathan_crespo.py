@@ -232,3 +232,79 @@ def action_move(current_node, action):
 	new_node = ( update_cost(current_node[0], action), -1, current_node[1], state_moved )
 	return new_node
 
+#?(cost, index, parent, state)
+def create_nodes(initial_state, goal_state):
+	"""Creates the State space of all possible movements until goal state is reached.
+
+	Args:
+		initial_state (array): multi dimensional array 3x3 that describes the initial configuarion of the puzzle
+		goal_state (array): multi dimensional array 3x3 that describes the final configuration the algorithm must find.
+
+	Returns:
+		str: 'DONE'. The process have ended thus we have a solution in the tree structure generated.
+	"""
+	# Start the timer
+	start_time = time.time()
+	goal_reached = False
+	counter_nodes = 0
+	# Add initial node to the heap
+	hq.heappush(generated_nodes, (0, counter_nodes, None, initial_state))
+	while (not goal_reached) and len(generated_nodes):
+		print(counter_nodes)
+		# Remove the lowest cost path from the heap and store it into a variable
+		current_node = generated_nodes[0]
+		hq.heappop(generated_nodes)
+		# For updating the heap structure
+		hq.heapify(generated_nodes)
+		# Mark node as visited
+		visited_nodes.append(current_node)
+		visited_nodes_states.add(current_node[3])
+		# Check if popup_node is goal state
+		goal_reached = current_node[3] == goal_state
+		if goal_reached:
+			goal_reached = True
+			end_time = time.time()
+			return f'DONE in {end_time-start_time} seconds.'
+		#Apply action set to node to get new states/children
+		for action in action_set:
+			child = action_move(current_node, action)
+			# If movement was not possible, ignore it
+			if not child:
+				continue
+			# Check if child is in open list generated nodes
+			where_is_node = 0
+			is_in_open_list = False
+			for node in generated_nodes:
+				if node[3] == child[3]:
+					is_in_open_list = True
+					break
+				where_is_node +=1
+			if not is_in_open_list:
+				counter_nodes += 1
+				child_to_enter = (child[0],counter_nodes,child[2],child[3])
+				hq.heappush(generated_nodes, child_to_enter)
+			#check if cost is greater in node in open list
+			elif generated_nodes[where_is_node][0] > child[0]:
+				# Update parent node and cost of this child in the generated nodes heap
+				generated_nodes[where_is_node] = (child[0], generated_nodes[where_is_node][1], child[2], child[3])
+			# For updating the heap structure
+			hq.heapify(generated_nodes)
+	return False
+def generate_path(node):
+	"""Generate the path from the initial node to the goal state.
+
+	Args:
+		node (Node): Current node to evaluate its parent (previous move done).
+	Returns:
+		Boolean: True if no more of the path are available
+	"""
+	while node is not None:
+		goal_path.append(node[3])
+		parent_at = 0
+		for node_check in visited_nodes:
+			if node_check[1] == node[2]:
+				break
+			parent_at += 1
+		node = visited_nodes[parent_at] if parent_at < len(visited_nodes) else None
+	return True
+
